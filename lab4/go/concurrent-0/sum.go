@@ -6,6 +6,12 @@ import (
 	"os"
 )
 
+
+type Assinatura struct{
+    sum int
+    path string
+}
+
 // read a file from a filepath and return a slice of bytes
 func readFile(filePath string) ([]byte, error) {
 	data, err := ioutil.ReadFile(filePath)
@@ -17,7 +23,7 @@ func readFile(filePath string) ([]byte, error) {
 }
 
 // sum all bytes of a file
-func sum(filePath string, out chan int)  {
+func sum(filePath string, out chan Assinatura)  {
 	data, _ := readFile(filePath)
 // 	if err != nil {
 // 		return 0, err
@@ -27,8 +33,8 @@ func sum(filePath string, out chan int)  {
 	for _, b := range data {
 		_sum += int(b)
 	}
-
-	out <- _sum
+    assinatura := Assinatura{_sum, filePath}
+	out <- assinatura
 }
 
 // print the totalSum for all files and the files with equal sum
@@ -40,18 +46,18 @@ func main() {
 
 	var totalSum int64
 	sums := make(map[int][]string)
-	sumsChannel := make(chan int)
+	sumsChannel := make(chan Assinatura)
 	for _, path := range os.Args[1:] {
 		go sum(path, sumsChannel)
     }
     close(sumsChannel)
     for v := range sumsChannel {
-        totalSum += int64(v)
+        sums[v.sum] = append(sums[v.sum], v.path)
+        totalSum += int64(v.sum)
     }
 
-		//sums[_sum] = append(sums[_sum], path)
 
-	//fmt.Println(totalSum)
+	fmt.Println(totalSum)
 
 	for sum, files := range sums {
 		if len(files) > 1 {
